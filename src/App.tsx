@@ -1,24 +1,110 @@
-import React from 'react';
-import logo from './logo.svg';
+import { useState } from 'react';
 import './App.css';
+import {
+  Chat,
+  ChatInput,
+  Conversation,
+  NewSessionButton,
+  Session,
+  SessionGroups,
+  SessionListItem,
+  SessionMessage,
+  SessionMessagePanel,
+  SessionMessages,
+  SessionMessagesHeader,
+  SessionsGroup,
+  SessionsList
+} from 'reachat';
+import { chatTheme } from './theme';
 
 function App() {
+  const [activeId, setActiveId] = useState<string>();
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [count, setCount] = useState<number>(sessions.length + 1);
+
+  const handleNewSession = () => {
+    const newId = count.toLocaleString();
+    setSessions([
+      ...sessions,
+      {
+        id: newId,
+        title: `New Session #${newId}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        conversations: []
+      }
+    ]);
+    setActiveId(newId);
+    setCount(count + 1);
+  };
+
+  const handleDelete = (id: string) => {
+    const updated = sessions.filter((s) => s.id !== id);
+    setSessions([...updated]);
+  };
+
+  const handleNewMessage = (message: string) => {
+    setLoading(true);
+    const curr = sessions.find((s) => s.id === activeId);
+    if (curr) {
+      const newMessage: Conversation = {
+        id: `${curr.id}-${curr.conversations.length}`,
+        question: message,
+        response: 'this is an example response',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      const updated = {
+        ...curr,
+        conversations: [...curr.conversations, newMessage]
+      };
+      setSessions([...sessions.filter((s) => s.id !== activeId), updated]);
+    }
+    setLoading(false);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="h-screen w-screen p-2">
+      <Chat
+        sessions={sessions}
+        activeSessionId={activeId}
+        isLoading={loading}
+        onNewSession={handleNewSession}
+        onSelectSession={setActiveId}
+        onDeleteSession={handleDelete}
+        onSendMessage={handleNewMessage}
+        theme={chatTheme}
+      >
+        <SessionsList>
+          <NewSessionButton />
+          <SessionGroups>
+            {(groups) =>
+              groups.map(({ heading, sessions }) => (
+                <SessionsGroup heading={heading} key={heading}>
+                  {sessions.map((s) => (
+                    <SessionListItem key={s.id} session={s} />
+                  ))}
+                </SessionsGroup>
+              ))
+            }
+          </SessionGroups>
+        </SessionsList>
+        <SessionMessagePanel>
+          <SessionMessagesHeader />
+          <SessionMessages>
+            {(conversations) =>
+              conversations.map((conversation) => (
+                <SessionMessage
+                  key={conversation.id}
+                  conversation={conversation}
+                />
+              ))
+            }
+          </SessionMessages>
+          <ChatInput />
+        </SessionMessagePanel>
+      </Chat>
     </div>
   );
 }
