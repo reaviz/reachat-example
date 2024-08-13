@@ -11,7 +11,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "reablocks": "^8.4.4",
-    "reachat": "^1.0.5",
+    "reachat": "^1.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
